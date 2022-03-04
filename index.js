@@ -1,14 +1,31 @@
 const path = require("path");
 const fs = require("fs");
 
+//input header
+const inputHeader = `//this is headerxxx
+`;
+
+const removeOldHeader = (str) => {
+  let newStr = str;
+  if (str.trim().startsWith("/*")) {
+    const lastComment = str.indexOf("*/");
+    newStr = str.slice(lastComment + 2, str.length).trim();
+
+    if (newStr.startsWith("/*")) {
+      newStr = removeOldHeader(newStr);
+    }
+  }
+  return newStr;
+};
+
 const changeContentFile = (header, pathFile) => {
   fs.readFile(pathFile, "utf8", function (err, data) {
     if (err) {
       return console.log(err);
     }
     // var result = data.replace(/string to be replaced/g, 'replacement');
-    var result = `${header}
-    ${data}`;
+    const newContent = removeOldHeader(data);
+    var result = `${header}${newContent}`;
 
     fs.writeFile(pathFile, result, "utf8", function (err) {
       if (err) return console.log(err);
@@ -31,12 +48,12 @@ const getPathFiles = (pathFolder) => {
       if (!file.includes(".")) {
         getPathFiles(`${pathFolder}/${file}`);
       } else {
-        changeContentFile("//this is headerxxx", `${pathFolder}/${file}`);
+        changeContentFile(inputHeader, `${pathFolder}/${file}`);
       }
     });
   });
 };
 
-const folderName = process.argv[0];
+const folderName = process.argv[2];
 
 getPathFiles(folderName);
